@@ -88,4 +88,96 @@ class SavePetUseCaseTest {
             }
         }
     }
+
+    @Test
+    fun invoke_blankSpecies_throwsIllegalArgumentException() {
+        val pet = Pet(
+            id = "1",
+            name = "Rex",
+            species = "",
+            breed = "Labrador",
+            birthDate = "10/10/2020",
+            gender = "Macho",
+            rga = "12345",
+            microchip = "98765",
+            ownerName = "Ana",
+            emergencyPhone = "11999999999",
+            photoPath = null
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                savePetUseCase(pet, null)
+            }
+        }
+    }
+
+    @Test
+    fun invoke_blankGender_throwsIllegalArgumentException() {
+        val pet = Pet(
+            id = "1",
+            name = "Rex",
+            species = "Cão",
+            breed = "Labrador",
+            birthDate = "10/10/2020",
+            gender = "",
+            rga = "12345",
+            microchip = "98765",
+            ownerName = "Ana",
+            emergencyPhone = "11999999999",
+            photoPath = null
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                savePetUseCase(pet, null)
+            }
+        }
+    }
+
+    @Test
+    fun invoke_blankOwnerName_throwsIllegalArgumentException() {
+        val pet = Pet(
+            id = "1",
+            name = "Rex",
+            species = "Cão",
+            breed = "Labrador",
+            birthDate = "10/10/2020",
+            gender = "Macho",
+            rga = "12345",
+            microchip = "98765",
+            ownerName = "",
+            emergencyPhone = "11999999999",
+            photoPath = null
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                savePetUseCase(pet, null)
+            }
+        }
+    }
+
+    @Test
+    fun invoke_blankEmergencyPhone_throwsIllegalArgumentException() {
+        val pet = Pet(
+            id = "1",
+            name = "Rex",
+            species = "Cão",
+            breed = "Labrador",
+            birthDate = "10/10/2020",
+            gender = "Macho",
+            rga = "12345",
+            microchip = "98765",
+            ownerName = "Ana",
+            emergencyPhone = "",
+            photoPath = null
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                savePetUseCase(pet, null)
+            }
+        }
+    }
 }
