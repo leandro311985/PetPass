@@ -14,6 +14,9 @@ interface ExamDao {
     @Query("SELECT * FROM exams ORDER BY performedAt DESC, createdAt DESC")
     fun observeAllExams(): Flow<List<ExamEntity>>
 
+    @Query("UPDATE exams SET nextDueDate = NULL, reminderDismissed = 1 WHERE id = :examId")
+    suspend fun clearNextDueDate(examId: String)
+
     @Insert
     suspend fun insertExam(exam: ExamEntity)
 }

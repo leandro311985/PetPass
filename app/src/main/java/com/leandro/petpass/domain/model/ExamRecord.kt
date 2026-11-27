@@ -6,5 +6,7 @@ data class ExamRecord(
     val name: String,
     val performedAt: String,
     val veterinarian: String?,
-    val result: String?
+    val result: String?,
+    val nextDueDate: String? = null,
+    val reminderDismissed: Boolean = false
 )

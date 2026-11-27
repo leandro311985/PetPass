@@ -11,6 +11,12 @@ interface VaccineDao {
     @Query("SELECT * FROM vaccines WHERE petId = :petId ORDER BY createdAt DESC")
     fun observeVaccines(petId: String): Flow<List<VaccineEntity>>
 
+    @Query("SELECT * FROM vaccines ORDER BY nextDueDate ASC")
+    fun observeAllVaccines(): Flow<List<VaccineEntity>>
+
+    @Query("UPDATE vaccines SET nextDueDate = NULL WHERE id = :vaccineId")
+    suspend fun clearNextDueDate(vaccineId: String)
+
     @Insert
     suspend fun insertVaccine(vaccine: VaccineEntity)
 }

@@ -66,6 +66,7 @@ fun PetPassHomeScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showShareDialog by remember { mutableStateOf(false) }
+    var reminderToComplete by remember { mutableStateOf<HealthReminderUiModel?>(null) }
 
     if (showShareDialog && currentPet != null) {
         val pet = currentPet.rgData
@@ -114,6 +115,31 @@ fun PetPassHomeScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showShareDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    reminderToComplete?.let { reminder ->
+        AlertDialog(
+            onDismissRequest = { reminderToComplete = null },
+            title = { Text("Concluir cuidado?") },
+            text = {
+                Text("Deseja marcar ${reminder.category.lowercase()} “${reminder.title}” como realizado?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onCompleteReminder(reminder.id)
+                        reminderToComplete = null
+                    }
+                ) {
+                    Text("Sim, concluir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { reminderToComplete = null }) {
                     Text("Cancelar")
                 }
             }
@@ -248,7 +274,7 @@ fun PetPassHomeScreen(
                 if (currentPet.upcomingReminders.isEmpty()) {
                     item {
                         Text(
-                            text = "Tudo em dia! Nenhuma vacina ou medicação pendente.",
+                            text = "Tudo em dia! Nenhum exame, vacina ou cuidado pendente.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -260,7 +286,7 @@ fun PetPassHomeScreen(
                     ) { reminder ->
                         HealthReminderCard(
                             reminder = reminder,
-                            onCompleteClick = { onCompleteReminder(reminder.id) }
+                            onCompleteClick = { reminderToComplete = reminder }
                         )
                     }
                 }

@@ -14,6 +14,9 @@ class ExamRepositoryImpl(private val examDao: ExamDao) : ExamRepository {
     override fun observeExams(petId: String): Flow<List<ExamRecord>> =
         examDao.observeExams(petId).map { exams -> exams.map { it.toDomain() } }
 
+    override fun observeAllExams(): Flow<List<ExamRecord>> =
+        examDao.observeAllExams().map { exams -> exams.map { it.toDomain() } }
+
     override fun observeLatestExamDates(): Flow<Map<String, String>> =
         examDao.observeAllExams().map { exams ->
             exams.distinctBy { it.petId }.associate { it.petId to it.toDomain().performedAt }
@@ -22,5 +25,10 @@ class ExamRepositoryImpl(private val examDao: ExamDao) : ExamRepository {
     override suspend fun saveExam(exam: ExamRecord): Unit =
         withContext(Dispatchers.IO) {
             examDao.insertExam(exam.toEntity())
+        }
+
+    override suspend fun clearNextDueDate(examId: String) =
+        withContext(Dispatchers.IO) {
+            examDao.clearNextDueDate(examId)
         }
 }

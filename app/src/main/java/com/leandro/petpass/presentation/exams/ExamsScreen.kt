@@ -164,6 +164,28 @@ fun ExamsScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         OutlinedTextField(
+                            value = state.nextDueDate,
+                            onValueChange = {
+                                onEvent(ExamEvent.NextDueDateChanged(it.filter(Char::isDigit).take(8)))
+                            },
+                            label = { Text("Próximo exame (opcional)") },
+                            placeholder = { Text("dd/mm/aaaa") },
+                            singleLine = true,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    tint = PetPassGreen
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            ),
+                            visualTransformation = DateVisualTransformation,
+                            colors = petPassTextFieldColors(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
                             value = state.result,
                             onValueChange = { onEvent(ExamEvent.ResultChanged(it)) },
                             label = { Text("Resultado ou observações (opcional)") },

@@ -18,8 +18,18 @@ class VaccineRepositoryImpl(
             vaccines.map { it.toDomain() }
         }
 
+    override fun observeAllVaccines(): Flow<List<Vaccine>> =
+        vaccineDao.observeAllVaccines().map { vaccines ->
+            vaccines.map { it.toDomain() }
+        }
+
     override suspend fun saveVaccine(vaccine: Vaccine): Unit =
         withContext(Dispatchers.IO) {
             vaccineDao.insertVaccine(vaccine.toEntity())
+        }
+
+    override suspend fun clearNextDueDate(vaccineId: String) =
+        withContext(Dispatchers.IO) {
+            vaccineDao.clearNextDueDate(vaccineId)
         }
 }
