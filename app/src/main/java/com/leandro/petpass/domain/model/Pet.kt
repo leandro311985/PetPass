@@ -7,6 +7,7 @@ data class Pet(
     val breed: String,
     val birthDate: String,
     val gender: String,
+    val rga: String,
     val microchip: String,
     val ownerName: String,
     val emergencyPhone: String,

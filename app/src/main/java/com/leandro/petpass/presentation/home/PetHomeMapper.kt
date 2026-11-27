@@ -17,6 +17,7 @@ fun Pet.toHomeUiModel(
         breed = breed.ifBlank { "Não informada" },
         birthDate = birthDate.toDateDisplayFormat(),
         gender = gender,
+        rga = rga,
         microchip = microchip,
         ownerName = ownerName,
         emergencyPhone = emergencyPhone,

@@ -51,6 +51,27 @@ fun AddPetScreen(
     onEvent: (AddPetEvent) -> Unit,
     onBack: () -> Unit
 ) {
+    if (state.isSaved) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {},
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Pets,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = { Text(if (state.isEditing) "Pet Atualizado com Sucesso! 🐾" else "Pet Cadastrado com Sucesso! 🐾") },
+            text = { Text(if (state.isEditing) "As alterações no RG digital e dados do pet foram salvas." else "O RG digital e a carteirinha do seu amiguinho já estão prontos para uso.") },
+            confirmButton = {
+                Button(onClick = onBack) {
+                    Text(if (state.isEditing) "Voltar" else "Ver RG Digital")
+                }
+            }
+        )
+    }
+
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri -> onEvent(AddPetEvent.PhotoSelected(uri?.toString())) }
@@ -59,7 +80,7 @@ fun AddPetScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Adicionar pet") },
+                title = { Text(if (state.isEditing) "Editar pet" else "Adicionar pet") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -176,6 +197,14 @@ fun AddPetScreen(
             }
 
             OutlinedTextField(
+                value = state.rga,
+                onValueChange = { onEvent(AddPetEvent.RgaChanged(it)) },
+                label = { Text("RGA - Registro Geral Animal (opcional)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
                 value = state.microchip,
                 onValueChange = { onEvent(AddPetEvent.MicrochipChanged(it)) },
                 label = { Text("Microchip (opcional)") },
@@ -228,7 +257,7 @@ fun AddPetScreen(
                     )
                     Text("Salvando...", modifier = Modifier.padding(start = 8.dp))
                 } else {
-                    Text("Salvar pet")
+                    Text(if (state.isEditing) "Salvar alterações" else "Salvar pet")
                 }
             }
 

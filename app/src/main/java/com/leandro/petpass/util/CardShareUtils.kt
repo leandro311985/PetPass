@@ -24,6 +24,7 @@ object CardShareUtils {
             Nascimento: ${pet.birthDate}
             Tutor: ${pet.ownerName}
             Contato de Emergência: ${pet.emergencyPhone}
+            RGA: ${pet.rga.ifBlank { "Não informado" }}
             Microchip: ${pet.microchip.ifBlank { "Não possui" }}
             
             🔗 Perfil Completo & Carteira de Vacinas:

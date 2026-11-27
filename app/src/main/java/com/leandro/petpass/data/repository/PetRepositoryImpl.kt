@@ -20,14 +20,25 @@ class PetRepositoryImpl(
 
     override suspend fun savePet(pet: Pet, photoUri: String?): Unit =
         withContext(Dispatchers.IO) {
-        val photoPath = photoUri?.let(imageStorage::saveImage)
-        try {
-            petDao.insertPet(
-                pet.copy(photoPath = photoPath).toEntity(System.currentTimeMillis())
-            )
-        } catch (exception: Exception) {
-            photoPath?.let(imageStorage::deleteImage)
-            throw exception
+            val finalPhotoPath = if (!photoUri.isNullOrBlank() && photoUri != pet.photoPath) {
+                try {
+                    imageStorage.saveImage(photoUri)
+                } catch (_: Exception) {
+                    pet.photoPath
+                }
+            } else {
+                pet.photoPath
+            }
+
+            try {
+                petDao.upsertPet(
+                    pet.copy(photoPath = finalPhotoPath).toEntity(System.currentTimeMillis())
+                )
+            } catch (exception: Exception) {
+                if (!photoUri.isNullOrBlank() && photoUri != pet.photoPath && finalPhotoPath != pet.photoPath) {
+                    finalPhotoPath?.let(imageStorage::deleteImage)
+                }
+                throw exception
+            }
         }
-    }
 }

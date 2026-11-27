@@ -27,7 +27,8 @@ class PetPassContainer(context: Context) {
     ).addMigrations(
         PetPassDatabase.MIGRATION_1_2,
         PetPassDatabase.MIGRATION_2_3,
-        PetPassDatabase.MIGRATION_3_4
+        PetPassDatabase.MIGRATION_3_4,
+        PetPassDatabase.MIGRATION_4_5
     ).build()
 
     private val petRepository = PetRepositoryImpl(

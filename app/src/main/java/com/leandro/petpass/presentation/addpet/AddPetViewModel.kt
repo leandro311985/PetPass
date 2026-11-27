@@ -16,10 +16,31 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AddPetViewModel(
-    private val savePetUseCase: SavePetUseCase
+    private val savePetUseCase: SavePetUseCase,
+    initialPet: Pet? = null
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(AddPetUiState())
+    private val _uiState = MutableStateFlow(
+        if (initialPet != null) {
+            AddPetUiState(
+                isEditing = true,
+                name = initialPet.name,
+                species = initialPet.species,
+                breed = initialPet.breed,
+                birthDate = initialPet.birthDate.filter(Char::isDigit),
+                gender = initialPet.gender,
+                rga = initialPet.rga,
+                microchip = initialPet.microchip,
+                ownerName = initialPet.ownerName,
+                emergencyPhone = initialPet.emergencyPhone,
+                photoUri = initialPet.photoPath
+            )
+        } else {
+            AddPetUiState()
+        }
+    )
     val uiState = _uiState.asStateFlow()
+    private val petId: String = initialPet?.id ?: UUID.randomUUID().toString()
+    private val existingPhotoPath: String? = initialPet?.photoPath
 
     fun onEvent(event: AddPetEvent) {
         when (event) {
@@ -33,6 +54,7 @@ class AddPetViewModel(
             is AddPetEvent.BreedChanged -> updateState { copy(breed = event.value) }
             is AddPetEvent.BirthDateChanged -> updateState { copy(birthDate = event.value) }
             is AddPetEvent.GenderChanged -> updateState { copy(gender = event.value) }
+            is AddPetEvent.RgaChanged -> updateState { copy(rga = event.value) }
             is AddPetEvent.MicrochipChanged -> updateState { copy(microchip = event.value) }
             is AddPetEvent.OwnerNameChanged -> updateState { copy(ownerName = event.value) }
             is AddPetEvent.EmergencyPhoneChanged ->
@@ -52,20 +74,22 @@ class AddPetViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            val photoUriToSave = if (state.photoUri == existingPhotoPath) null else state.photoUri
             val pet = Pet(
-                id = UUID.randomUUID().toString(),
+                id = petId,
                 name = state.name.trim(),
                 species = state.species.trim(),
                 breed = state.breed.trim(),
                 birthDate = state.birthDate.toDateDisplayFormat(),
                 gender = state.gender.trim(),
+                rga = state.rga.trim(),
                 microchip = state.microchip.trim(),
                 ownerName = state.ownerName.trim(),
                 emergencyPhone = state.emergencyPhone.trim(),
-                photoPath = null
+                photoPath = existingPhotoPath
             )
             try {
-                savePetUseCase(pet, state.photoUri)
+                savePetUseCase(pet, photoUriToSave)
                 _uiState.update { it.copy(isSaving = false, isSaved = true) }
             } catch (exception: CancellationException) {
                 throw exception
@@ -86,14 +110,15 @@ class AddPetViewModel(
     }
 
     class Factory(
-        private val savePetUseCase: SavePetUseCase
+        private val savePetUseCase: SavePetUseCase,
+        private val initialPet: Pet? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (!modelClass.isAssignableFrom(AddPetViewModel::class.java)) {
                 throw IllegalArgumentException("ViewModel não suportada: ${modelClass.name}")
             }
-            return AddPetViewModel(savePetUseCase) as T
+            return AddPetViewModel(savePetUseCase, initialPet) as T
         }
     }
 }

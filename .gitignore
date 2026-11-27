@@ -1,15 +1,55 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Built application files
+*.apk
+*.aar
+*.aab
+
+# Files for the JVM target
+*.class
+
+# Generated files / build output
+/build/
+.gradle/
+/app/build/
+/captures/
+
+# Local configuration file (contains local SDK path)
 local.properties
+
+# Log files
+*.log
+
+# Android Studio caches, workspace and local history
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/codeStyles/
+.idea/editor.xml
+.idea/assetWizardSettings.xml
+.idea/navEditor.xml
+.idea/appInsightsSettings.xml
+.idea/deploymentTargetSelector.xml
+.idea/compiler.xml
+
+# IntelliJ project files
+*.iml
+*.ipr
+*.iws
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Kotlin & Native compiler outputs
+.kotlin/
+.cxx/
+.externalNativeBuild/

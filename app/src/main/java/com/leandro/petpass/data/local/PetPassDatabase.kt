@@ -15,7 +15,7 @@ import com.leandro.petpass.data.local.entity.WeightEntity
 
 @Database(
     entities = [PetEntity::class, VaccineEntity::class, WeightEntity::class, ExamEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class PetPassDatabase : RoomDatabase() {
@@ -86,6 +86,12 @@ abstract class PetPassDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_exams_petId ON exams(petId)")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pets ADD COLUMN rga TEXT NOT NULL DEFAULT ''")
             }
         }
     }
