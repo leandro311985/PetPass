@@ -30,8 +30,27 @@ class PetAgeUtilsTest {
         val dateStr = SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")).format(calendar.time)
 
         val (age, stage) = PetAgeUtils.calculateAgeAndLifeStage(dateStr)
-        assertEquals("9 a e 0 m", age)
+        assertEquals("9 anos", age)
         assertEquals("Sênior 👑", stage)
+    }
+
+    @Test
+    fun calculateAgeAndLifeStage_blankDate() {
+        val (age, stage) = PetAgeUtils.calculateAgeAndLifeStage(" ")
+        assertEquals("Não informada", age)
+        assertEquals("Adulto ⭐", stage)
+    }
+
+    @Test
+    fun calculateAgeAndLifeStage_adult() {
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.YEAR, -3)
+        }
+        val dateStr = SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")).format(calendar.time)
+
+        val (age, stage) = PetAgeUtils.calculateAgeAndLifeStage(dateStr)
+        assertEquals("3 anos", age)
+        assertEquals("Adulto ⭐", stage)
     }
 
     @Test
