@@ -14,6 +14,8 @@ import com.leandro.petpass.domain.usecase.ObserveLatestExamDatesUseCase
 import com.leandro.petpass.domain.usecase.ObserveVaccinesUseCase
 import com.leandro.petpass.domain.usecase.ObserveLatestWeightsUseCase
 import com.leandro.petpass.domain.usecase.ObserveWeightRecordsUseCase
+import com.leandro.petpass.domain.usecase.ObserveAllVaccinesUseCase
+import com.leandro.petpass.domain.usecase.ObserveAllExamsUseCase
 import com.leandro.petpass.domain.usecase.SavePetUseCase
 import com.leandro.petpass.domain.usecase.SaveExamUseCase
 import com.leandro.petpass.domain.usecase.SaveVaccineUseCase
@@ -28,7 +30,9 @@ class PetPassContainer(context: Context) {
         PetPassDatabase.MIGRATION_1_2,
         PetPassDatabase.MIGRATION_2_3,
         PetPassDatabase.MIGRATION_3_4,
-        PetPassDatabase.MIGRATION_4_5
+        PetPassDatabase.MIGRATION_4_5,
+        PetPassDatabase.MIGRATION_5_6,
+        PetPassDatabase.MIGRATION_6_7
     ).build()
 
     private val petRepository = PetRepositoryImpl(
@@ -40,6 +44,7 @@ class PetPassContainer(context: Context) {
     val savePetUseCase = SavePetUseCase(petRepository)
     private val vaccineRepository = VaccineRepositoryImpl(database.vaccineDao())
     val observeVaccinesUseCase = ObserveVaccinesUseCase(vaccineRepository)
+    val observeAllVaccinesUseCase = ObserveAllVaccinesUseCase(vaccineRepository)
     val saveVaccineUseCase = SaveVaccineUseCase(vaccineRepository)
     private val weightRepository = WeightRepositoryImpl(database.weightDao())
     val observeWeightRecordsUseCase = ObserveWeightRecordsUseCase(weightRepository)
@@ -47,6 +52,15 @@ class PetPassContainer(context: Context) {
     val saveWeightRecordUseCase = SaveWeightRecordUseCase(weightRepository)
     private val examRepository = ExamRepositoryImpl(database.examDao())
     val observeExamsUseCase = ObserveExamsUseCase(examRepository)
+    val observeAllExamsUseCase = ObserveAllExamsUseCase(examRepository)
     val observeLatestExamDatesUseCase = ObserveLatestExamDatesUseCase(examRepository)
     val saveExamUseCase = SaveExamUseCase(examRepository)
+
+    suspend fun vaccineRepositoryClearNextDueDate(vaccineId: String) {
+        vaccineRepository.clearNextDueDate(vaccineId)
+    }
+
+    suspend fun examRepositoryClearNextDueDate(examId: String) {
+        examRepository.clearNextDueDate(examId)
+    }
 }

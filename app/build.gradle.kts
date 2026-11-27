@@ -4,6 +4,21 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val releaseStoreFile = providers.gradleProperty("PETPASS_STORE_FILE")
+    .orElse(providers.environmentVariable("PETPASS_STORE_FILE"))
+val releaseStorePassword = providers.gradleProperty("PETPASS_STORE_PASSWORD")
+    .orElse(providers.environmentVariable("PETPASS_STORE_PASSWORD"))
+val releaseKeyAlias = providers.gradleProperty("PETPASS_KEY_ALIAS")
+    .orElse(providers.environmentVariable("PETPASS_KEY_ALIAS"))
+val releaseKeyPassword = providers.gradleProperty("PETPASS_KEY_PASSWORD")
+    .orElse(providers.environmentVariable("PETPASS_KEY_PASSWORD"))
+val hasReleaseSigning = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { it.isPresent }
+
 android {
     namespace = "com.leandro.petpass"
     compileSdk {
@@ -20,8 +35,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigning) {
+                storeFile = file(releaseStoreFile.get())
+                storePassword = releaseStorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -64,4 +93,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+}
+
+val releaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.endsWith("bundleRelease") || it.endsWith("assembleRelease")
+}
+if (releaseTaskRequested && !hasReleaseSigning) {
+    throw GradleException(
+        "Release signing is not configured. Set PETPASS_STORE_FILE, " +
+            "PETPASS_STORE_PASSWORD, PETPASS_KEY_ALIAS, and PETPASS_KEY_PASSWORD."
+    )
 }

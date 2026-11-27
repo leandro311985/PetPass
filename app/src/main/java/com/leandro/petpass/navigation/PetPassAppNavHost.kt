@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import com.leandro.petpass.presentation.vaccines.VaccineViewModel
 import com.leandro.petpass.presentation.vaccines.VaccinesScreen
 import com.leandro.petpass.presentation.weight.WeightScreen
 import com.leandro.petpass.presentation.weight.WeightViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun PetPassAppNavHost(
@@ -46,6 +48,14 @@ fun PetPassAppNavHost(
     val latestExamDates by remember(container) {
         container.observeLatestExamDatesUseCase()
     }.collectAsState(initial = emptyMap())
+
+    val vaccines by remember(container) {
+        container.observeAllVaccinesUseCase()
+    }.collectAsState(initial = emptyList())
+
+    val exams by remember(container) {
+        container.observeAllExamsUseCase()
+    }.collectAsState(initial = emptyList())
 
     val startRoute = if (isUserLoggedIn) "home" else "login"
 
@@ -67,11 +77,14 @@ fun PetPassAppNavHost(
                 }
             } else {
                 var selectedPetIndex by remember { mutableIntStateOf(0) }
-                val homePets = remember(currentPets, latestWeights, latestExamDates) {
+                val scope = rememberCoroutineScope()
+                val homePets = remember(currentPets, latestWeights, latestExamDates, vaccines, exams) {
                     currentPets.map { pet ->
                         pet.toHomeUiModel(
                             currentWeightKg = latestWeights[pet.id],
-                            lastVetVisit = latestExamDates[pet.id] ?: "Sem consultas"
+                            lastVetVisit = latestExamDates[pet.id] ?: "Sem consultas",
+                            vaccines = vaccines,
+                            exams = exams
                         )
                     }
                 }
@@ -94,7 +107,20 @@ fun PetPassAppNavHost(
                     onNavigateToExams = { petId ->
                         navController.navigate("exams/$petId")
                     },
-                    onCompleteReminder = {}
+                    onCompleteReminder = { reminderId ->
+                        scope.launch {
+                            when {
+                                reminderId.startsWith("vaccine:") ->
+                                    container.vaccineRepositoryClearNextDueDate(
+                                        reminderId.removePrefix("vaccine:")
+                                    )
+                                reminderId.startsWith("exam:") ->
+                                    container.examRepositoryClearNextDueDate(
+                                        reminderId.removePrefix("exam:")
+                                    )
+                            }
+                        }
+                    }
                 )
             }
         }

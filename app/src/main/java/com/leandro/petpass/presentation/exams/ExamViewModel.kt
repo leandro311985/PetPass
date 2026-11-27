@@ -45,6 +45,8 @@ class ExamViewModel(
             is ExamEvent.NameChanged -> updateState { copy(name = event.value) }
             is ExamEvent.PerformedAtChanged ->
                 updateState { copy(performedAt = event.value.filter(Char::isDigit).take(8)) }
+            is ExamEvent.NextDueDateChanged ->
+                updateState { copy(nextDueDate = event.value.filter(Char::isDigit).take(8)) }
             is ExamEvent.VeterinarianChanged ->
                 updateState { copy(veterinarian = event.value) }
             is ExamEvent.ResultChanged -> updateState { copy(result = event.value) }
@@ -70,13 +72,15 @@ class ExamViewModel(
                         name = state.name.trim(),
                         performedAt = state.performedAt.toDateDisplayFormat(),
                         veterinarian = state.veterinarian.trim().ifBlank { null },
-                        result = state.result.trim().ifBlank { null }
+                        result = state.result.trim().ifBlank { null },
+                        nextDueDate = state.nextDueDate.toDateDisplayFormat().ifBlank { null }
                     )
                 )
                 _uiState.update {
                     it.copy(
                         name = "",
                         performedAt = "",
+                        nextDueDate = "",
                         veterinarian = "",
                         result = "",
                         isSaving = false,

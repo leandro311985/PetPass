@@ -2,6 +2,9 @@
 *.apk
 *.aar
 *.aab
+*.jks
+*.keystore
+keystore.properties
 
 # Files for the JVM target
 *.class

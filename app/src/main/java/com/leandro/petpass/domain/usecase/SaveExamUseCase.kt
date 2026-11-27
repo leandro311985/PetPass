@@ -12,6 +12,9 @@ class SaveExamUseCase(private val repository: ExamRepository) {
         require(isValidDate(exam.performedAt)) {
             "Informe uma data válida no formato dd/mm/aaaa."
         }
+        require(exam.nextDueDate == null || isValidDate(exam.nextDueDate)) {
+            "Informe uma data do próximo exame válida no formato dd/mm/aaaa."
+        }
         repository.saveExam(exam)
     }
 

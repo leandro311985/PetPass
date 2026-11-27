@@ -28,7 +28,13 @@ fun ExamEntity.toDomain(): ExamRecord {
         name = name,
         performedAt = examDisplayDateFormat.format(date),
         veterinarian = veterinarian,
-        result = result
+        result = result,
+        nextDueDate = nextDueDate?.let { storedDate ->
+            parseExamDate(storedDate, examStorageDateFormat)?.let {
+                examDisplayDateFormat.format(it)
+            }
+        },
+        reminderDismissed = reminderDismissed
     )
 }
 
@@ -42,6 +48,12 @@ fun ExamRecord.toEntity(): ExamEntity {
         performedAt = examStorageDateFormat.format(date),
         veterinarian = veterinarian,
         result = result,
+        nextDueDate = nextDueDate?.let { value ->
+            parseExamDate(value, examDisplayDateFormat)?.let {
+                examStorageDateFormat.format(it)
+            }
+        },
+        reminderDismissed = reminderDismissed,
         createdAt = System.currentTimeMillis()
     )
 }
