@@ -1,3 +1,7 @@
+---
+title: Política de Privacidade do PetPass
+---
+
 # Política de Privacidade do PetPass
 
 **Última atualização:** 27 de novembro de 2026
@@ -7,7 +11,7 @@ Esta política descreve como o aplicativo PetPass para Android trata informaçõ
 ## Responsável pelo tratamento e contato
 
 - **Responsável:** Leandro Alves
-- **E-mail para privacidade e solicitações:** leandro.alves311985@gmail.com
+- **E-mail para privacidade e solicitações:** [leandro.alves311985@gmail.com](mailto:leandro.alves311985@gmail.com)
 
 ## Informações tratadas
 
