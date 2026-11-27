@@ -70,7 +70,7 @@ O AAB é gerado em `app/build/outputs/bundle/release/`. A tarefa `bundleRelease`
 - [ ] Configurar a chave de upload em ambiente seguro e guardar backup.
 - [ ] Testar o AAB assinado em uma faixa de teste interno no Play Console.
 - [ ] Preparar nome, descrição curta e completa, capturas de tela, ícone de 512 × 512 e imagem de destaque da ficha da loja.
-- [ ] Preencher responsável e e-mail em [PRIVACY_POLICY.md](PRIVACY_POLICY.md), publicar a política em uma URL pública e cadastrá-la na ficha da loja.
+- [ ] Revisar [a política de privacidade](docs/index.md), publicar o site pelo GitHub Pages usando a pasta `/docs` e cadastrar a URL pública na ficha da loja.
 - [ ] Preencher Segurança dos dados, classificação indicativa e declaração de anúncios no Play Console de acordo com o comportamento real do app.
 - [ ] Revisar requisitos atuais de nível de API alvo, acesso à conta de desenvolvedor e testes exigidos pelo Google Play antes do envio para produção.
 - [ ] Verificar o fluxo de backup e restauração e as declarações correspondentes no Play Console.
