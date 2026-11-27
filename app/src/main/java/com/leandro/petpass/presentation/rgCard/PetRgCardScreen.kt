@@ -32,6 +32,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.leandro.petpass.util.CardShareUtils
 import com.leandro.petpass.util.rememberQrCodeBitmap
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -40,6 +41,60 @@ fun PetRgCardScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showShareDialog by remember { mutableStateOf(false) }
+
+    if (showShareDialog) {
+        AlertDialog(
+            onDismissRequest = { showShareDialog = false },
+            title = { Text("Compartilhar RG do ${pet.name}") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Escolha o formato de compartilhamento:")
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            CardShareUtils.sharePetInfoText(context, pet)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📄 Compartilhar Texto com Link")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            scope.launch {
+                                val bitmap = com.leandro.petpass.util.CardExportUtils.generateCardBitmap(pet, isBack = false)
+                                com.leandro.petpass.util.CardExportUtils.shareBitmap(context, bitmap, "RG_${pet.name}_Frente")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🖼️ Compartilhar Imagem (Alta Resolução)")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            scope.launch {
+                                com.leandro.petpass.util.CardExportUtils.sharePdf(context, pet)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📑 Compartilhar PDF Oficial (Frente e Verso)")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showShareDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -58,7 +113,7 @@ fun PetRgCardScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { CardShareUtils.sharePetInfoText(context, pet) },
+                onClick = { showShareDialog = true },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF00695C)
                 )
@@ -120,6 +175,10 @@ private fun PetRgFront(pet: PetRgUiModel) {
     val bgGradient = Brush.linearGradient(
         colors = listOf(Color(0xFFE0F2F1), Color(0xFFB2DFDB))
     )
+
+    val (ageText, lifeStage) = remember(pet.birthDate) {
+        com.leandro.petpass.util.PetAgeUtils.calculateAgeAndLifeStage(pet.birthDate)
+    }
 
     Column(
         modifier = Modifier
@@ -207,7 +266,10 @@ private fun PetRgFront(pet: PetRgUiModel) {
                 Spacer(modifier = Modifier.width(2.dp))
                 RgField(label = "RAÇA", value = pet.breed)
                 Spacer(modifier = Modifier.width(2.dp))
-                RgField(label = "NASCIMENTO", value = pet.birthDate)
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    RgField(label = "IDADE", value = ageText)
+                    RgField(label = "FASE", value = lifeStage)
+                }
             }
         }
 
@@ -262,9 +324,13 @@ private fun PetRgBack(pet: PetRgUiModel) {
                 color = Color(0xFF004D40)
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 RgField(label = "TUTOR RESPONSÁVEL", value = pet.ownerName)
                 RgField(label = "CONTATO DE EMERGÊNCIA", value = pet.emergencyPhone)
+                RgField(
+                    label = "RGA (REGISTRO GERAL)",
+                    value = pet.rga.ifBlank { "NÃO INFORMADO" }
+                )
                 RgField(
                     label = "MICROCHIP",
                     value = pet.microchip.ifBlank { "NÃO POSSUI" }
@@ -336,6 +402,7 @@ val samplePet = PetRgUiModel(
     breed = "Golden Retriever",
     birthDate = "15/05/2021",
     gender = "Macho",
+    rga = "123.456.789-SP",
     microchip = "985141002345678",
     ownerName = "Ana Maria Silva",
     emergencyPhone = "(11) 98765-4321",

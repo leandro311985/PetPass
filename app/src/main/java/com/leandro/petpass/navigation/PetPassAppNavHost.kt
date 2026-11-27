@@ -1,17 +1,23 @@
 package com.leandro.petpass.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.leandro.petpass.PetPassContainer
+import com.leandro.petpass.domain.model.Pet
 import com.leandro.petpass.presentation.addpet.AddPetScreen
 import com.leandro.petpass.presentation.addpet.AddPetViewModel
 import com.leandro.petpass.presentation.exams.ExamViewModel
@@ -26,67 +32,71 @@ import com.leandro.petpass.presentation.weight.WeightViewModel
 @Composable
 fun PetPassAppNavHost(
     container: PetPassContainer,
-    isUserLoggedIn: Boolean = true // Depois você conecta isso ao seu token JWT / DataStore
+    isUserLoggedIn: Boolean = true
 ) {
     val navController = rememberNavController()
     val pets by remember(container) {
         container.observePetsUseCase()
-    }.collectAsState(initial = emptyList())
+    }.collectAsState(initial = null as List<Pet>?)
+
     val latestWeights by remember(container) {
         container.observeLatestWeightsUseCase()
     }.collectAsState(initial = emptyMap())
+
     val latestExamDates by remember(container) {
         container.observeLatestExamDatesUseCase()
     }.collectAsState(initial = emptyMap())
 
-    // Define qual tela abre primeiro
     val startRoute = if (isUserLoggedIn) "home" else "login"
 
     NavHost(
         navController = navController,
         startDestination = startRoute
     ) {
-        // Rota 1: Login (opcional no início do MVP)
-        composable("login") {
-            // LoginScreen(onLoginSuccess = { navController.navigate("home") })
-        }
+        composable("login") {}
 
-        // Rota 2: Tela Home
+        // Rota 2: Tela Home com indicador de carregamento inicial para evitar flash de "vazio"
         composable("home") {
-            var selectedPetIndex by remember { mutableIntStateOf(0) }
-            val homePets = remember(pets, latestWeights, latestExamDates) {
-                pets.map { pet ->
-                    pet.toHomeUiModel(
-                        currentWeightKg = latestWeights[pet.id],
-                        lastVetVisit = latestExamDates[pet.id] ?: "Sem consultas"
-                    )
+            val currentPets = pets
+            if (currentPets == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF00695C))
                 }
-            }
+            } else {
+                var selectedPetIndex by remember { mutableIntStateOf(0) }
+                val homePets = remember(currentPets, latestWeights, latestExamDates) {
+                    currentPets.map { pet ->
+                        pet.toHomeUiModel(
+                            currentWeightKg = latestWeights[pet.id],
+                            lastVetVisit = latestExamDates[pet.id] ?: "Sem consultas"
+                        )
+                    }
+                }
 
-            PetPassHomeScreen(
-                pets = homePets,
-                selectedPetIndex = selectedPetIndex,
-                onSelectPet = { newIndex -> selectedPetIndex = newIndex },
-                onAddPetClick = { navController.navigate("add_pet") },
-                onShareRgClick = { petRg ->
-                    // Chama função de compartilhar imagem
-                },
-                onEditPetClick = { petId ->
-                    navController.navigate("edit_pet/$petId")
-                },
-                onNavigateToVaccines = { petId ->
-                    navController.navigate("vaccines/$petId")
-                },
-                onNavigateToWeight = { petId ->
-                    navController.navigate("weight/$petId")
-                },
-                onNavigateToExams = { petId ->
-                    navController.navigate("exams/$petId")
-                },
-                onCompleteReminder = { reminderId ->
-                    // Chama ViewModel para dar baixa na vacina/remédio
-                }
-            )
+                PetPassHomeScreen(
+                    pets = homePets,
+                    selectedPetIndex = selectedPetIndex,
+                    onSelectPet = { newIndex -> selectedPetIndex = newIndex },
+                    onAddPetClick = { navController.navigate("add_pet") },
+                    onShareRgClick = {},
+                    onEditPetClick = { petId ->
+                        navController.navigate("edit_pet/$petId")
+                    },
+                    onNavigateToVaccines = { petId ->
+                        navController.navigate("vaccines/$petId")
+                    },
+                    onNavigateToWeight = { petId ->
+                        navController.navigate("weight/$petId")
+                    },
+                    onNavigateToExams = { petId ->
+                        navController.navigate("exams/$petId")
+                    },
+                    onCompleteReminder = {}
+                )
+            }
         }
 
         // Rota 3: Cadastro de Novo Pet
@@ -98,9 +108,25 @@ fun PetPassAppNavHost(
             )
             val state by addPetViewModel.uiState.collectAsState()
 
-            LaunchedEffect(state.isSaved) {
-                if (state.isSaved) navController.popBackStack()
-            }
+            AddPetScreen(
+                state = state,
+                onEvent = addPetViewModel::onEvent,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Rota 3.1: Edição de Pet Existente
+        composable("edit_pet/{petId}") { backStackEntry ->
+            val petId = backStackEntry.arguments?.getString("petId") ?: ""
+            val petToEdit = pets?.firstOrNull { it.id == petId }
+
+            val addPetViewModel: AddPetViewModel = viewModel(
+                key = "edit_pet-$petId",
+                factory = remember(container, petToEdit) {
+                    AddPetViewModel.Factory(container.savePetUseCase, petToEdit)
+                }
+            )
+            val state by addPetViewModel.uiState.collectAsState()
 
             AddPetScreen(
                 state = state,
@@ -123,7 +149,7 @@ fun PetPassAppNavHost(
                 }
             )
             val state by vaccineViewModel.uiState.collectAsState()
-            val petName = pets.firstOrNull { it.id == petId }?.name ?: "Pet"
+            val petName = pets?.firstOrNull { it.id == petId }?.name ?: "Pet"
 
             VaccinesScreen(
                 petName = petName,
@@ -146,7 +172,7 @@ fun PetPassAppNavHost(
                 }
             )
             val state by weightViewModel.uiState.collectAsState()
-            val petName = pets.firstOrNull { it.id == petId }?.name ?: "Pet"
+            val petName = pets?.firstOrNull { it.id == petId }?.name ?: "Pet"
 
             WeightScreen(
                 petName = petName,
@@ -169,7 +195,7 @@ fun PetPassAppNavHost(
                 }
             )
             val state by examViewModel.uiState.collectAsState()
-            val petName = pets.firstOrNull { it.id == petId }?.name ?: "Pet"
+            val petName = pets?.firstOrNull { it.id == petId }?.name ?: "Pet"
 
             ExamsScreen(
                 petName = petName,

@@ -18,23 +18,23 @@ fun String.toDateDisplayFormat(): String {
 
 object DateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        val digits = text.text
-        val hasDaySeparator = digits.length >= 2
-        val hasMonthSeparator = digits.length >= 4
+        val digits = text.text.filter(Char::isDigit).take(8)
         val formatted = digits.toDateDisplayFormat()
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                var transformedOffset = offset
-                if (hasDaySeparator && offset >= 2) transformedOffset++
-                if (hasMonthSeparator && offset >= 4) transformedOffset++
-                return transformedOffset
+                val clampedOffset = offset.coerceIn(0, digits.length)
+                var transformedOffset = clampedOffset
+                if (clampedOffset >= 2) transformedOffset++
+                if (clampedOffset >= 4) transformedOffset++
+                return transformedOffset.coerceIn(0, formatted.length)
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                var originalOffset = offset
-                if (hasDaySeparator && offset > 2) originalOffset--
-                if (hasMonthSeparator && offset > 5) originalOffset--
+                val clampedOffset = offset.coerceIn(0, formatted.length)
+                var originalOffset = clampedOffset
+                if (clampedOffset > 2) originalOffset--
+                if (clampedOffset > 5) originalOffset--
                 return originalOffset.coerceIn(0, digits.length)
             }
         }

@@ -6,6 +6,7 @@ sealed interface AddPetEvent {
     data class BreedChanged(val value: String) : AddPetEvent
     data class BirthDateChanged(val value: String) : AddPetEvent
     data class GenderChanged(val value: String) : AddPetEvent
+    data class RgaChanged(val value: String) : AddPetEvent
     data class MicrochipChanged(val value: String) : AddPetEvent
     data class OwnerNameChanged(val value: String) : AddPetEvent
     data class EmergencyPhoneChanged(val value: String) : AddPetEvent

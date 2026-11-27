@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,15 +28,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.leandro.petpass.presentation.rgCard.PetRgInteractiveCard
 import com.leandro.petpass.presentation.rgCard.PetRgUiModel
+import com.leandro.petpass.util.CardExportUtils
+import com.leandro.petpass.util.CardShareUtils
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +63,62 @@ fun PetPassHomeScreen(
     onCompleteReminder: (String) -> Unit
 ) {
     val currentPet = pets.getOrNull(selectedPetIndex)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showShareDialog by remember { mutableStateOf(false) }
+
+    if (showShareDialog && currentPet != null) {
+        val pet = currentPet.rgData
+        AlertDialog(
+            onDismissRequest = { showShareDialog = false },
+            title = { Text("Compartilhar RG do ${pet.name}") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Escolha o formato de compartilhamento:")
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            CardShareUtils.sharePetInfoText(context, pet)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📄 Compartilhar Texto com Link")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            scope.launch {
+                                val bitmap = CardExportUtils.generateCardBitmap(pet, isBack = false)
+                                CardExportUtils.shareBitmap(context, bitmap, "RG_${pet.name}_Frente")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🖼️ Compartilhar Imagem (Alta Resolução)")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            showShareDialog = false
+                            scope.launch {
+                                CardExportUtils.sharePdf(context, pet)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📑 Compartilhar PDF Oficial (Frente e Verso)")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showShareDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -124,7 +191,10 @@ fun PetPassHomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Button(
-                                onClick = { onShareRgClick(currentPet.rgData) },
+                                onClick = {
+                                    onShareRgClick(currentPet.rgData)
+                                    showShareDialog = true
+                                },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF00695C)
